@@ -23,6 +23,7 @@ app.get('/', function(req,res){
 });
 
 // teste
+// teste 2
 
 app.post('/registrar', function(req,res){
     const {username, password} = req.body;
