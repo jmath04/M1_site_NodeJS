@@ -1,6 +1,7 @@
 const bodyParser = require('body-parser');
 const express = require('express');
-const session = require('express-session');
+const cookieParser = require('cookie-parser');
+const cookies = require('cookies')
 
 const app = express();
 
@@ -15,6 +16,7 @@ const users = [
 ];
 
 app.use(bodyParser.urlencoded({extended:true}));
+app.use(cookieParser());
 
 app.listen(3000);
 
@@ -28,7 +30,7 @@ app.post('/registrar', function(req,res){
     user = users.find( u => ( u.username == username));
 
     if(user && user.password == password){
-        req.session.user = {username : user.username};
+        res.cookie('currentUser',user.username, {maxAge:90000000});
         res.redirect('/logado');
     }
     else{
@@ -38,14 +40,12 @@ app.post('/registrar', function(req,res){
 
 
 app.get('/logado',(req,res) =>{
-    if(req.session.user){
+    if(req.cookies.currentUser){
         res.sendFile(path.join(__dirname,'front','logado.html'));
     }
     else{
         res.redirect('/');
     }
 })
-
-
 
 
