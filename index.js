@@ -24,6 +24,9 @@ app.get('/', function(req,res){
     res.sendFile(path.join(__dirname,'front','index.html'));
 });
 
+// teste
+// teste 2
+
 app.post('/registrar', function(req,res){
     const {username, password} = req.body;
 
