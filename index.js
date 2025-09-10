@@ -1,8 +1,7 @@
-const bodyParser = require('body-parser');
 const express = require('express');
-const session = require('express-session');
-const path = require('path');
 const cookieParser = require('cookie-parser');
+const path = require('path');
+
 
 const app = express();
 
@@ -10,78 +9,61 @@ const users = [
     {
         username: 'joao',
         password: '123'
-    },
-    {
-        username: 'scheila',
-        password: '456'
     }
 ];
 
+app.use(express.urlencoded({extended:true})); 
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname,'front')));
 
-app.use(session({
-    secret: 'scheila77',
-    resave: false,
-    saveUninitialized: true
-}));
-
-app.use((req, res, next) => {
-    if(!req.session.user && req.cookies.user) {
-        req.session.user = {username: req.cookies.user};
-    }
-    next();
-})
-
-app.use(express.static(path.join(__dirname, 'front')));
-app.use(bodyParser.urlencoded({extended:true}));
+app.listen(3000, () => {
+    console.log('Servidor rodando na porta 3000!');
+});
 
 app.get('/', function(req,res){
-    if (req.session.user) {
+    if(req.cookies.currentUser){
         return res.redirect('/logado');
     }
     res.sendFile(path.join(__dirname,'front','index.html'));
 });
 
-app.post('/registrar', function(req,res){
-    const {username, password, remember} = req.body;
+app.post('/login', function(req,res){
+    const {username, password, manter} = req.body;
 
     const user = users.find( u => u.username === username);
 
     if(user && user.password === password){
-        req.session.user = {username : user.username};
-
-        if (remember) {
-            res.cookie('user', user.username, {maxAge: 3*24*60*60*1000, httpOnly: false, sameSite: 'lax', path: '/'});
+        if(manter === 'on'){ 
+            res.cookie('currentUser', user.username, {maxAge: 1000 * 60 * 60 * 24 * 3});
+        }else{
+            res.cookie('currentUser', user.username);
         }
-
-        res.redirect('/logado');
+        return res.redirect('/logado');
     }
-    else {
-        res.cookie('loginError', '1', {maxAge: 2000});
-        return res.redirect('/');
+    else{
+        res.cookie('loginError', '1', { maxAge: 5000 });
+        res.redirect('/');
     }
 });
 
-
 app.get('/logado',(req,res) =>{
-    if(req.session.user) {
-        return res.sendFile(path.join(__dirname,'front','logado.html'));
+    if(req.cookies.currentUser){
+        res.sendFile(path.join(__dirname,'front','logado.html'));
     }
     else{
         res.redirect('/');
     }
-});
+})
 
-app.get('/logout', (req, res) => {
-    res.clearCookie('user');
-    req.session.destroy(() => {
-        res.redirect('/');
-    });
-});
+app.get('/get-username', (req,res) =>{
+    if(req.cookies.currentUser){
+        res.json({username: req.cookies.currentUser});
+    }else{
+        res.status(401).json({error: 'Usuário não autenticado'});
+    }
+})
 
-app.listen(3000, () => {
-    console.log("http://localhost:3000");
-});
-
-
-
+app.get('/logout', (req,res) =>{
+   res.clearCookie('currentUser');
+   res.redirect('/');
+})
