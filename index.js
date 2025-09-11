@@ -9,12 +9,15 @@ const users = [
     {
         username: 'joao',
         password: '123'
+    },
+    {
+        username: 'scheila',
+        password: '456'
     }
 ];
 
 app.use(express.urlencoded({extended:true})); 
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname,'front')));
 
 app.listen(3000, () => {
     console.log('Servidor rodando na porta 3000!');
@@ -26,6 +29,8 @@ app.get('/', function(req,res){
     }
     res.sendFile(path.join(__dirname,'front','index.html'));
 });
+
+app.use(express.static(path.join(__dirname,'front')));
 
 app.post('/login', function(req,res){
     const {username, password, manter} = req.body;
